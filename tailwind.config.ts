@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,13 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				planet: {
+					cyan: '#5DE0E6',
+					purple: '#9B87F5',
+					violet: '#7E69AB',
+					coral: '#FE6479',
+					dark: '#111827'
 				}
 			},
 			borderRadius: {
@@ -84,11 +92,33 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'glow': {
+					'0%, 100%': { 
+						textShadow: '0 0 8px rgba(93, 224, 230, 0.7), 0 0 12px rgba(93, 224, 230, 0.5)' 
+					},
+					'50%': { 
+						textShadow: '0 0 16px rgba(93, 224, 230, 0.9), 0 0 20px rgba(93, 224, 230, 0.7)' 
+					}
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0px)' },
+					'50%': { transform: 'translateY(-10px)' }
+				},
+				'orbit': {
+					'0%': { transform: 'rotate(0deg) translateX(120px) rotate(0deg)' },
+					'100%': { transform: 'rotate(360deg) translateX(120px) rotate(-360deg)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'glow': 'glow 2s ease-in-out infinite',
+				'float': 'float 6s ease-in-out infinite',
+				'orbit': 'orbit 20s linear infinite'
+			},
+			backgroundImage: {
+				'space': 'radial-gradient(circle at center, #1E293B, #0F172A 35%, #020617 100%)'
 			}
 		}
 	},
