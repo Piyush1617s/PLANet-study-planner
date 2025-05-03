@@ -49,18 +49,16 @@ const AnalyticsDashboard: React.FC = () => {
     });
   }
   
-  // Subject performance based on task completion
-  const subjectPerformanceData = subjects.map(subject => {
-    const subjectTasks = tasks.filter(task => task.category === subject.name);
-    const completedTasks = subjectTasks.filter(task => task.completed);
-    const completionRate = subjectTasks.length > 0
-      ? Math.round((completedTasks.length / subjectTasks.length) * 100)
-      : 0;
+  // Subject task completion data
+  const subjectTasksData = subjects.map(subject => {
+    const totalTasks = subject.tasks.length;
+    const completedTasks = subject.tasks.filter(task => task.completed).length;
     
     return {
       name: subject.name,
-      completion: subject.completion,
-      taskCompletion: completionRate
+      total: totalTasks,
+      completed: completedTasks,
+      completion: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
     };
   });
 
@@ -96,26 +94,26 @@ const AnalyticsDashboard: React.FC = () => {
         </div>
         
         <div className="bg-planet-dark/40 p-4 rounded-lg border border-planet-cyan/20">
-          <h3 className="text-lg text-planet-cyan mb-3">Task Completion Status</h3>
+          <h3 className="text-lg text-planet-cyan mb-3">Subject Task Completion</h3>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={taskCompletionData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, value }) => `${name}: ${value}`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  <Cell fill="#5DE0E6" />
-                  <Cell fill="#FE6479" />
-                </Pie>
+              <BarChart
+                data={subjectTasksData}
+                margin={{
+                  top: 5,
+                  right: 30,
+                  left: 20,
+                  bottom: 30,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                <XAxis dataKey="name" stroke="#AAA" angle={-45} textAnchor="end" height={70} />
+                <YAxis stroke="#AAA" />
                 <Tooltip />
                 <Legend />
-              </PieChart>
+                <Bar dataKey="completed" name="Completed Tasks" fill="#5DE0E6" />
+                <Bar dataKey="total" name="Total Tasks" fill="#9B87F5" />
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
@@ -144,11 +142,11 @@ const AnalyticsDashboard: React.FC = () => {
         </div>
         
         <div className="bg-planet-dark/40 p-4 rounded-lg border border-planet-cyan/20 col-span-1 md:col-span-2">
-          <h3 className="text-lg text-planet-cyan mb-3">Subject Performance</h3>
+          <h3 className="text-lg text-planet-cyan mb-3">Subject Completion Progress</h3>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
-                data={subjectPerformanceData}
+                data={subjectTasksData}
                 margin={{
                   top: 5,
                   right: 30,
@@ -161,8 +159,7 @@ const AnalyticsDashboard: React.FC = () => {
                 <YAxis stroke="#AAA" />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="completion" name="Self-Reported Progress" stroke="#9B87F5" activeDot={{ r: 8 }} />
-                <Line type="monotone" dataKey="taskCompletion" name="Task Completion Rate" stroke="#5DE0E6" />
+                <Line type="monotone" dataKey="completion" name="Completion Rate (%)" stroke="#9B87F5" activeDot={{ r: 8 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>

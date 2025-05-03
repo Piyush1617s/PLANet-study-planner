@@ -17,6 +17,12 @@ export interface Task {
   urgency: UrgencyType;
 }
 
+export interface SubjectTask {
+  id: string;
+  name: string;
+  completed: boolean;
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -32,7 +38,7 @@ export interface Event {
 export interface Subject {
   id: string;
   name: string;
-  courses: string[];
+  tasks: SubjectTask[];
   completion: number;
   priority: PriorityType;
 }
@@ -73,6 +79,10 @@ interface PlanetContextType {
   addSubject: (subject: Omit<Subject, 'id'>) => void;
   updateSubject: (id: string, subject: Partial<Subject>) => void;
   deleteSubject: (id: string) => void;
+  addSubjectTask: (subjectId: string, task: Omit<SubjectTask, 'id'>) => void;
+  toggleSubjectTaskCompletion: (subjectId: string, taskId: string) => void;
+  deleteSubjectTask: (subjectId: string, taskId: string) => void;
+  updateSubjectCompletion: (subjectId: string) => void;
 
   // Study Sessions
   studySessions: StudySession[];
@@ -134,9 +144,35 @@ const initialEvents = [
 ];
 
 const initialSubjects = [
-  { id: '1', name: 'Mathematics', courses: ['Calculus', 'Linear Algebra'], completion: 60, priority: 'high' as PriorityType },
-  { id: '2', name: 'Physics', courses: ['Mechanics', 'Electromagnetism'], completion: 40, priority: 'medium' as PriorityType },
-  { id: '3', name: 'Chemistry', courses: ['Organic Chemistry'], completion: 75, priority: 'low' as PriorityType }
+  { 
+    id: '1', 
+    name: 'Mathematics', 
+    tasks: [
+      { id: 'task_1_1', name: 'Learn Calculus', completed: true },
+      { id: 'task_1_2', name: 'Practice Linear Algebra', completed: false }
+    ], 
+    completion: 50, 
+    priority: 'high' as PriorityType 
+  },
+  { 
+    id: '2', 
+    name: 'Physics', 
+    tasks: [
+      { id: 'task_2_1', name: 'Study Mechanics', completed: false },
+      { id: 'task_2_2', name: 'Review Electromagnetism', completed: false }
+    ], 
+    completion: 0, 
+    priority: 'medium' as PriorityType 
+  },
+  { 
+    id: '3', 
+    name: 'Chemistry', 
+    tasks: [
+      { id: 'task_3_1', name: 'Learn Organic Chemistry', completed: true }
+    ], 
+    completion: 100, 
+    priority: 'low' as PriorityType 
+  }
 ];
 
 const initialStudySessions = [
@@ -274,6 +310,63 @@ export const PlanetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const deleteSubject = (id: string) => {
     setSubjects(prev => prev.filter(subject => subject.id !== id));
   };
+  
+  // New subject task functions
+  const addSubjectTask = (subjectId: string, task: Omit<SubjectTask, 'id'>) => {
+    const newTask = { ...task, id: `subtask_${Date.now()}` };
+    setSubjects(prev => prev.map(subject => 
+      subject.id === subjectId 
+        ? { ...subject, tasks: [...subject.tasks, newTask as SubjectTask] } 
+        : subject
+    ));
+    
+    // Update completion percentage after adding a task
+    updateSubjectCompletion(subjectId);
+  };
+  
+  const toggleSubjectTaskCompletion = (subjectId: string, taskId: string) => {
+    setSubjects(prev => prev.map(subject => 
+      subject.id === subjectId 
+        ? { 
+            ...subject, 
+            tasks: subject.tasks.map(task => 
+              task.id === taskId 
+                ? { ...task, completed: !task.completed } 
+                : task
+            )
+          } 
+        : subject
+    ));
+    
+    // Update completion percentage after toggling completion
+    updateSubjectCompletion(subjectId);
+  };
+  
+  const deleteSubjectTask = (subjectId: string, taskId: string) => {
+    setSubjects(prev => prev.map(subject => 
+      subject.id === subjectId 
+        ? { ...subject, tasks: subject.tasks.filter(task => task.id !== taskId) } 
+        : subject
+    ));
+    
+    // Update completion percentage after deleting a task
+    updateSubjectCompletion(subjectId);
+  };
+  
+  const updateSubjectCompletion = (subjectId: string) => {
+    setSubjects(prev => prev.map(subject => {
+      if (subject.id === subjectId) {
+        const totalTasks = subject.tasks.length;
+        if (totalTasks === 0) return { ...subject, completion: 0 };
+        
+        const completedTasks = subject.tasks.filter(task => task.completed).length;
+        const newCompletion = Math.round((completedTasks / totalTasks) * 100);
+        
+        return { ...subject, completion: newCompletion };
+      }
+      return subject;
+    }));
+  };
 
   // Study session functions
   const addStudySession = (session: Omit<StudySession, 'id'>) => {
@@ -308,6 +401,10 @@ export const PlanetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         addSubject,
         updateSubject,
         deleteSubject,
+        addSubjectTask,
+        toggleSubjectTaskCompletion,
+        deleteSubjectTask,
+        updateSubjectCompletion,
         studySessions,
         addStudySession,
         settings,
