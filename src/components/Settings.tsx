@@ -43,14 +43,6 @@ const Settings: React.FC = () => {
             <option value="Saturday">Saturday</option>
           </select>
         </div>
-        
-        <div className="pt-4 border-t border-planet-cyan/20">
-          <h3 className="text-lg text-planet-cyan mb-3">About PLANet</h3>
-          <p className="text-gray-300">
-            PLANet is your ultimate study companion designed to help you track, plan, and optimize your academic journey.
-            Version 1.0.0
-          </p>
-        </div>
       </div>
     </PlanetCard>
   );

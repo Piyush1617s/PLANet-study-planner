@@ -1,8 +1,7 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 // Types
-export type TabType = 'tasks' | 'pomodoro' | 'calendar' | 'events' | 'subjects' | 'analytics';
+export type TabType = 'tasks' | 'pomodoro' | 'calendar' | 'events' | 'subjects' | 'analytics' | 'profile';
 export type PriorityType = 'low' | 'medium' | 'high';
 export type UrgencyType = 'low' | 'medium' | 'high';
 
