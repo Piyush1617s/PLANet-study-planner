@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { format, startOfWeek, addDays, isSameDay, parseISO, addWeeks, subWeeks } from 'date-fns';
+import type { Day } from 'date-fns';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import PlanetCard from './PlanetCard';
 import { usePlanet } from '@/contexts/PlanetContext';
@@ -12,14 +13,14 @@ const CalendarView: React.FC = () => {
   
   // Get the start of the week based on user settings
   const getStartOfWeek = () => {
-    const dayMap: Record<string, number> = {
-      'Sunday': 0,
-      'Monday': 1,
-      'Tuesday': 2,
-      'Wednesday': 3,
-      'Thursday': 4,
-      'Friday': 5,
-      'Saturday': 6
+    const dayMap: Record<string, Day> = {
+      'Sunday': 0 as Day,
+      'Monday': 1 as Day,
+      'Tuesday': 2 as Day,
+      'Wednesday': 3 as Day,
+      'Thursday': 4 as Day,
+      'Friday': 5 as Day,
+      'Saturday': 6 as Day
     };
     
     return startOfWeek(currentDate, { weekStartsOn: dayMap[settings.firstDayOfWeek] });
