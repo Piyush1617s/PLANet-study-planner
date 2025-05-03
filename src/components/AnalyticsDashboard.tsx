@@ -51,8 +51,8 @@ const AnalyticsDashboard: React.FC = () => {
   
   // Subject task completion data
   const subjectTasksData = subjects.map(subject => {
-    const totalTasks = subject.tasks.length;
-    const completedTasks = subject.tasks.filter(task => task.completed).length;
+    const totalTasks = subject.tasks?.length || 0;
+    const completedTasks = subject.tasks?.filter(task => task.completed)?.length || 0;
     
     return {
       name: subject.name,
