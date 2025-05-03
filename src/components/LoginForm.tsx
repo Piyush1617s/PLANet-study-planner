@@ -4,6 +4,7 @@ import { User, Lock, AtSign } from 'lucide-react';
 import PlanetCard from './PlanetCard';
 import PlanetInput from './PlanetInput';
 import PlanetButton from './PlanetButton';
+import { useToast } from '@/hooks/use-toast';
 
 interface LoginFormProps {
   onLogin: () => void;
@@ -16,9 +17,18 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
     password: '',
     name: ''
   });
+  const [error, setError] = useState('');
+  const { toast } = useToast();
+  
+  // Mock user database - in a real app, this would come from a backend service
+  const mockUsers = [
+    { email: 'student@university.edu', password: 'password123', name: 'Student Name' },
+    { email: 'test@example.com', password: 'test123', name: 'Test User' }
+  ];
   
   const toggleMode = () => {
     setIsSignUp(!isSignUp);
+    setError('');
   };
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,13 +37,58 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
       ...formData,
       [name]: value
     });
+    setError('');
   };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, we would handle authentication here
-    // For now, we'll just call onLogin to simulate successful login
-    onLogin();
+    
+    if (isSignUp) {
+      // Handle sign up
+      if (formData.name.trim() === '' || formData.email.trim() === '' || formData.password.trim() === '') {
+        setError('All fields are required');
+        return;
+      }
+      
+      if (formData.password.length < 6) {
+        setError('Password must be at least 6 characters');
+        return;
+      }
+      
+      // Check if user already exists
+      if (mockUsers.some(user => user.email === formData.email)) {
+        setError('Email already exists');
+        return;
+      }
+      
+      // In a real app, we would register the user here
+      toast({
+        title: "Account created!",
+        description: "Your account has been successfully created.",
+      });
+      onLogin();
+    } else {
+      // Handle sign in
+      if (formData.email.trim() === '' || formData.password.trim() === '') {
+        setError('Email and password are required');
+        return;
+      }
+      
+      // Check if credentials match any user
+      const user = mockUsers.find(
+        user => user.email === formData.email && user.password === formData.password
+      );
+      
+      if (user) {
+        toast({
+          title: "Welcome back!",
+          description: `You've successfully signed in as ${user.name}.`,
+        });
+        onLogin();
+      } else {
+        setError('Invalid email or password');
+      }
+    }
   };
 
   return (
@@ -56,6 +111,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
           <h2 className="text-2xl text-planet-cyan mb-6">
             {isSignUp ? 'Join Study Orbit' : 'Welcome Back'}
           </h2>
+          
+          {error && (
+            <div className="mb-4 p-3 bg-red-900/30 border border-red-500/50 text-red-300 rounded-md text-sm">
+              {error}
+            </div>
+          )}
           
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
