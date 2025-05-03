@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 // Types
@@ -296,7 +297,12 @@ export const PlanetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Subject functions
   const addSubject = (subject: Omit<Subject, 'id'>) => {
-    const newSubject = { ...subject, id: `subject_${Date.now()}` };
+    // Ensure the tasks array is defined
+    const newSubject = { 
+      ...subject, 
+      id: `subject_${Date.now()}`,
+      tasks: subject.tasks || [] // Ensure tasks is an array
+    };
     setSubjects(prev => [...prev, newSubject as Subject]);
   };
 
@@ -315,7 +321,10 @@ export const PlanetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const newTask = { ...task, id: `subtask_${Date.now()}` };
     setSubjects(prev => prev.map(subject => 
       subject.id === subjectId 
-        ? { ...subject, tasks: [...subject.tasks, newTask as SubjectTask] } 
+        ? { 
+            ...subject, 
+            tasks: [...(subject.tasks || []), newTask as SubjectTask] // Ensure tasks is an array
+          } 
         : subject
     ));
     
@@ -328,7 +337,7 @@ export const PlanetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       subject.id === subjectId 
         ? { 
             ...subject, 
-            tasks: subject.tasks.map(task => 
+            tasks: (subject.tasks || []).map(task => // Ensure tasks is an array
               task.id === taskId 
                 ? { ...task, completed: !task.completed } 
                 : task
@@ -344,7 +353,10 @@ export const PlanetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const deleteSubjectTask = (subjectId: string, taskId: string) => {
     setSubjects(prev => prev.map(subject => 
       subject.id === subjectId 
-        ? { ...subject, tasks: subject.tasks.filter(task => task.id !== taskId) } 
+        ? { 
+            ...subject, 
+            tasks: (subject.tasks || []).filter(task => task.id !== taskId) // Ensure tasks is an array
+          } 
         : subject
     ));
     
@@ -355,10 +367,13 @@ export const PlanetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const updateSubjectCompletion = (subjectId: string) => {
     setSubjects(prev => prev.map(subject => {
       if (subject.id === subjectId) {
-        const totalTasks = subject.tasks.length;
+        // Ensure tasks is an array before trying to access its length
+        const tasks = subject.tasks || [];
+        const totalTasks = tasks.length;
+        
         if (totalTasks === 0) return { ...subject, completion: 0 };
         
-        const completedTasks = subject.tasks.filter(task => task.completed).length;
+        const completedTasks = tasks.filter(task => task.completed).length;
         const newCompletion = Math.round((completedTasks / totalTasks) * 100);
         
         return { ...subject, completion: newCompletion };
