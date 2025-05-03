@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
-import { Pencil, Plus, Calendar, Clock, X } from 'lucide-react';
-import PlanetCard from './PlanetCard';
+import { ListChecks, Plus, Calendar, Clock, X, Tag } from 'lucide-react';
 import PlanetInput from './PlanetInput';
 import PlanetButton from './PlanetButton';
 import { usePlanet, Task, PriorityType, UrgencyType } from '@/contexts/PlanetContext';
@@ -15,32 +14,45 @@ const TaskItem: React.FC<{ task: Task }> = ({ task }) => {
     high: 'bg-red-500'
   };
   
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+  
   return (
-    <div className="flex items-center justify-between p-3 border-b border-planet-cyan/20 last:border-0">
+    <div className="flex items-center justify-between p-3 bg-planet-dark/30 rounded-md mb-2 border-l-4"
+      style={{ borderLeftColor: task.priority === 'high' ? '#ff4b4b' : task.priority === 'medium' ? '#FFB800' : '#5DE0E6' }}>
       <div className="flex items-center gap-3">
         <input
           type="checkbox"
           checked={task.completed}
           onChange={() => toggleTaskCompletion(task.id)}
-          className="rounded-full h-5 w-5 text-planet-cyan bg-planet-dark/30 border-planet-cyan/40 focus:ring-planet-cyan"
+          className="w-5 h-5 bg-transparent border-2 border-planet-cyan/50 rounded-sm focus:outline-none focus:ring-0 checked:bg-planet-cyan checked:border-planet-cyan"
         />
         <div className="flex-1">
           <p className={`text-white ${task.completed ? 'line-through text-gray-500' : ''}`}>{task.name}</p>
           <div className="flex gap-4 mt-1 text-xs text-gray-400">
             <span className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
-              {task.dueDate}
+              {formatDate(task.dueDate)}
             </span>
-            <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {task.time}
-            </span>
-            <span>{task.category}</span>
+            {task.time && (
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {task.time}
+              </span>
+            )}
+            {task.category && (
+              <span className="flex items-center gap-1">
+                <Tag className="h-3 w-3" />
+                {task.category}
+              </span>
+            )}
           </div>
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <div className={`h-3 w-3 rounded-full ${priorityColors[task.priority]}`} title={`Priority: ${task.priority}`} />
         <button 
           onClick={() => deleteTask(task.id)}
           className="p-1 text-gray-400 hover:text-red-500 transition-colors"
@@ -73,7 +85,7 @@ const TaskManagement: React.FC = () => {
   };
 
   const handleAddTask = () => {
-    if (newTask.name.trim() && newTask.category && newTask.dueDate) {
+    if (newTask.name.trim()) {
       addTask({
         ...newTask,
         name: newTask.name.trim(),
@@ -94,24 +106,30 @@ const TaskManagement: React.FC = () => {
     if (filterValue === 'all') return true;
     if (filterValue === 'completed') return task.completed;
     if (filterValue === 'active') return !task.completed;
+    if (filterValue === 'high') return task.priority === 'high' && !task.completed;
+    if (filterValue === 'medium') return task.priority === 'medium' && !task.completed;
+    if (filterValue === 'low') return task.priority === 'low' && !task.completed;
     return task.category === filterValue;
   });
 
+  // Group tasks by priority for display
+  const highPriorityTasks = filteredTasks.filter(task => task.priority === 'high' && !task.completed);
+  const mediumPriorityTasks = filteredTasks.filter(task => task.priority === 'medium' && !task.completed);
+  const lowPriorityTasks = filteredTasks.filter(task => task.priority === 'low' && !task.completed);
+  const completedTasks = filteredTasks.filter(task => task.completed);
+
   return (
-    <PlanetCard title={<div className="flex items-center gap-2"><Pencil className="h-5 w-5" /> Task Management</div>}>
-      <div className="mb-6">
-        <h3 className="text-lg text-planet-cyan mb-3">Categories</h3>
-        <div className="flex gap-3 mb-4">
-          <PlanetInput
-            placeholder="New Category"
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-            className="max-w-xs"
-          />
-          <PlanetButton onClick={handleAddCategory}>
-            <Plus className="h-4 w-4 mr-1" /> Add Category
-          </PlanetButton>
-        </div>
+    <div>
+      <div className="mb-6 text-center">
+        <h1 className="text-4xl font-bold text-planet-cyan mb-2 flex items-center justify-center gap-2">
+          <ListChecks className="h-8 w-8" /> Task Management
+        </h1>
+        <p className="text-gray-400">Organize your study tasks effectively</p>
+      </div>
+      
+      {/* Categories Section */}
+      <div className="bg-planet-dark/40 border border-planet-cyan/30 rounded-lg p-6 mb-6">
+        <h2 className="text-xl text-planet-cyan mb-4">Categories</h2>
         
         <div className="flex flex-wrap gap-2 mb-4">
           {categories.map(category => (
@@ -120,106 +138,142 @@ const TaskManagement: React.FC = () => {
               className="bg-planet-dark/80 text-planet-cyan px-3 py-1 rounded-full border border-planet-cyan/30 text-sm"
             >
               {category.name}
+              <span className="ml-1 bg-planet-dark/40 px-1 rounded-full text-xs">1</span>
             </span>
           ))}
         </div>
+        
+        <div className="flex gap-3">
+          <PlanetInput
+            placeholder="New Category"
+            value={newCategory}
+            onChange={(e) => setNewCategory(e.target.value)}
+            className="max-w-xs"
+          />
+          <button 
+            onClick={handleAddCategory}
+            className="bg-planet-cyan/10 hover:bg-planet-cyan/20 text-planet-cyan px-4 py-2 rounded-md border border-planet-cyan/30 transition-colors"
+          >
+            Add Category
+          </button>
+        </div>
       </div>
       
-      <div>
-        <h3 className="text-lg text-planet-cyan mb-3">Tasks</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <PlanetInput
-            placeholder="Task Name"
-            value={newTask.name}
-            onChange={(e) => setNewTask({...newTask, name: e.target.value})}
-          />
-          
-          <select
-            value={newTask.category}
-            onChange={(e) => setNewTask({...newTask, category: e.target.value})}
-            className="bg-planet-dark/60 border border-planet-cyan/40 rounded-md py-2 px-4 text-white focus:outline-none focus:border-planet-cyan"
-          >
-            <option value="">Select Category</option>
-            {categories.map(category => (
-              <option key={category.id} value={category.name}>{category.name}</option>
-            ))}
-          </select>
-          
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <PlanetInput
-                type="date"
-                value={newTask.dueDate}
-                onChange={(e) => setNewTask({...newTask, dueDate: e.target.value})}
-              />
-            </div>
-            <div className="flex-1">
-              <PlanetInput
-                type="time"
-                value={newTask.time}
-                onChange={(e) => setNewTask({...newTask, time: e.target.value})}
-              />
-            </div>
+      {/* New Task Form */}
+      <div className="bg-planet-dark/40 border border-planet-cyan/30 rounded-lg p-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+          <div className="md:col-span-2">
+            <PlanetInput
+              placeholder="Task Name"
+              value={newTask.name}
+              onChange={(e) => setNewTask({...newTask, name: e.target.value})}
+            />
           </div>
           
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <select
-                value={newTask.priority}
-                onChange={(e) => setNewTask({...newTask, priority: e.target.value as PriorityType})}
-                className="bg-planet-dark/60 border border-planet-cyan/40 rounded-md py-2 px-4 text-white w-full focus:outline-none focus:border-planet-cyan"
-              >
-                <option value="low">Low Priority</option>
-                <option value="medium">Medium Priority</option>
-                <option value="high">High Priority</option>
-              </select>
-            </div>
-            <div className="flex-1">
-              <select
-                value={newTask.urgency}
-                onChange={(e) => setNewTask({...newTask, urgency: e.target.value as UrgencyType})}
-                className="bg-planet-dark/60 border border-planet-cyan/40 rounded-md py-2 px-4 text-white w-full focus:outline-none focus:border-planet-cyan"
-              >
-                <option value="low">Low Urgency</option>
-                <option value="medium">Medium Urgency</option>
-                <option value="high">High Urgency</option>
-              </select>
-            </div>
+          <div>
+            <select
+              value={newTask.category}
+              onChange={(e) => setNewTask({...newTask, category: e.target.value})}
+              className="bg-planet-dark/60 border border-planet-cyan/40 rounded-md py-2 px-4 text-white w-full focus:outline-none focus:border-planet-cyan"
+            >
+              <option value="">Select Category</option>
+              {categories.map(category => (
+                <option key={category.id} value={category.name}>{category.name}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <PlanetInput
+              type="date"
+              value={newTask.dueDate}
+              onChange={(e) => setNewTask({...newTask, dueDate: e.target.value})}
+            />
+          </div>
+          
+          <div>
+            <PlanetInput
+              type="time"
+              value={newTask.time}
+              onChange={(e) => setNewTask({...newTask, time: e.target.value})}
+            />
+          </div>
+          
+          <div>
+            <select
+              value={newTask.priority}
+              onChange={(e) => setNewTask({...newTask, priority: e.target.value as PriorityType})}
+              className="bg-planet-dark/60 border border-planet-cyan/40 rounded-md py-2 px-4 text-white w-full focus:outline-none focus:border-planet-cyan"
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
           </div>
         </div>
         
-        <PlanetButton onClick={handleAddTask} className="w-full mb-6">
-          <Plus className="h-4 w-4 mr-1" /> Add Task
-        </PlanetButton>
-        
-        <div className="mb-4">
-          <label className="text-sm text-planet-cyan mb-1 block">Filter Tasks:</label>
-          <select
-            value={filterValue}
-            onChange={(e) => setFilterValue(e.target.value)}
-            className="bg-planet-dark/60 border border-planet-cyan/40 rounded-md py-2 px-4 text-white focus:outline-none focus:border-planet-cyan"
+        <div className="mt-4 text-right">
+          <button
+            onClick={handleAddTask}
+            className="bg-planet-cyan text-planet-dark px-6 py-2 rounded-md hover:bg-planet-cyan/80 transition-colors inline-flex items-center gap-2"
           >
-            <option value="all">All Tasks</option>
-            <option value="completed">Completed</option>
-            <option value="active">Active</option>
-            {categories.map(category => (
-              <option key={category.id} value={category.name}>{category.name}</option>
-            ))}
-          </select>
+            <Plus className="h-4 w-4" /> Add Task
+          </button>
+        </div>
+      </div>
+      
+      {/* Task Lists by Priority */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="bg-planet-dark/40 border border-planet-cyan/30 rounded-lg p-4">
+          <h3 className="text-xl border-b border-planet-cyan/20 pb-3 mb-3">High Priority</h3>
+          
+          <div className="space-y-2 max-h-[300px] overflow-y-auto">
+            {highPriorityTasks.length > 0 ? (
+              highPriorityTasks.map(task => <TaskItem key={task.id} task={task} />)
+            ) : (
+              <p className="text-gray-400 text-center py-4">No high priority tasks</p>
+            )}
+          </div>
         </div>
         
-        <div className="max-h-80 overflow-y-auto">
-          {filteredTasks.length > 0 ? (
-            filteredTasks.map(task => (
-              <TaskItem key={task.id} task={task} />
-            ))
+        <div className="bg-planet-dark/40 border border-planet-cyan/30 rounded-lg p-4">
+          <h3 className="text-xl border-b border-planet-cyan/20 pb-3 mb-3">Medium Priority</h3>
+          
+          <div className="space-y-2 max-h-[300px] overflow-y-auto">
+            {mediumPriorityTasks.length > 0 ? (
+              mediumPriorityTasks.map(task => <TaskItem key={task.id} task={task} />)
+            ) : (
+              <p className="text-gray-400 text-center py-4">No medium priority tasks</p>
+            )}
+          </div>
+        </div>
+        
+        <div className="bg-planet-dark/40 border border-planet-cyan/30 rounded-lg p-4">
+          <h3 className="text-xl border-b border-planet-cyan/20 pb-3 mb-3">Low Priority</h3>
+          
+          <div className="space-y-2 max-h-[300px] overflow-y-auto">
+            {lowPriorityTasks.length > 0 ? (
+              lowPriorityTasks.map(task => <TaskItem key={task.id} task={task} />)
+            ) : (
+              <p className="text-gray-400 text-center py-4">No low priority tasks</p>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* Completed Tasks */}
+      <div className="bg-planet-dark/40 border border-planet-cyan/30 rounded-lg p-4">
+        <h3 className="text-xl border-b border-planet-cyan/20 pb-3 mb-3">Completed Tasks</h3>
+        
+        <div className="space-y-2 max-h-[300px] overflow-y-auto">
+          {completedTasks.length > 0 ? (
+            completedTasks.map(task => <TaskItem key={task.id} task={task} />)
           ) : (
-            <p className="text-gray-400 text-center py-4">No tasks found</p>
+            <p className="text-gray-400 text-center py-4">No completed tasks</p>
           )}
         </div>
       </div>
-    </PlanetCard>
+    </div>
   );
 };
 

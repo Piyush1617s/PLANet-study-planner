@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 // Types
-export type TabType = 'tasks' | 'pomodoro' | 'calendar' | 'events' | 'subjects' | 'analytics' | 'profile';
+export type TabType = 'dashboard' | 'tasks' | 'pomodoro' | 'calendar' | 'events' | 'subjects' | 'profile';
 export type PriorityType = 'low' | 'medium' | 'high';
 export type UrgencyType = 'low' | 'medium' | 'high';
 
@@ -184,7 +184,7 @@ const initialStudySessions = [
 ];
 
 export const PlanetProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [activeTab, setActiveTab] = useState<TabType>('tasks');
+  const [activeTab, setActiveTab] = useState<TabType>('dashboard'); // Set default tab to dashboard
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [events, setEvents] = useState<Event[]>(initialEvents);
