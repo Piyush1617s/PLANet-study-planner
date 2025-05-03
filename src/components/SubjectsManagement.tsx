@@ -111,30 +111,34 @@ const SubjectsManagement: React.FC = () => {
               
               {/* Task list for this subject */}
               <div className="space-y-2 mb-3">
-                {subject.tasks.map(task => (
-                  <div 
-                    key={task.id} 
-                    className="flex items-center justify-between bg-planet-dark/20 p-2 rounded-md border border-planet-cyan/10"
-                  >
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => toggleSubjectTaskCompletion(subject.id, task.id)}
-                        className={`h-5 w-5 rounded border flex items-center justify-center ${task.completed ? 'bg-planet-cyan border-planet-cyan text-planet-dark' : 'border-planet-cyan/50 text-transparent'}`}
-                      >
-                        {task.completed && <Check className="h-3 w-3" />}
-                      </button>
-                      <span className={`${task.completed ? 'line-through text-gray-500' : 'text-white'}`}>
-                        {task.name}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => deleteSubjectTask(subject.id, task.id)}
-                      className="text-gray-400 hover:text-red-500"
+                {subject.tasks && subject.tasks.length > 0 ? (
+                  subject.tasks.map(task => (
+                    <div 
+                      key={task.id} 
+                      className="flex items-center justify-between bg-planet-dark/20 p-2 rounded-md border border-planet-cyan/10"
                     >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => toggleSubjectTaskCompletion(subject.id, task.id)}
+                          className={`h-5 w-5 rounded border flex items-center justify-center ${task.completed ? 'bg-planet-cyan border-planet-cyan text-planet-dark' : 'border-planet-cyan/50 text-transparent'}`}
+                        >
+                          {task.completed && <Check className="h-3 w-3" />}
+                        </button>
+                        <span className={`${task.completed ? 'line-through text-gray-500' : 'text-white'}`}>
+                          {task.name}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => deleteSubjectTask(subject.id, task.id)}
+                        className="text-gray-400 hover:text-red-500"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-400 text-center py-1">No tasks added</p>
+                )}
               </div>
               
               {/* Add task input for this subject */}
