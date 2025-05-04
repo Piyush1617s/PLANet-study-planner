@@ -1,9 +1,12 @@
+
 import React, { useState } from 'react';
-import { ListChecks, Plus, Calendar, Clock, X, Tag } from 'lucide-react';
+import { ListChecks, Plus, Calendar, Clock, X, Tag, Trash } from 'lucide-react';
 import PlanetInput from './PlanetInput';
 import PlanetButton from './PlanetButton';
 import { usePlanet, Task, PriorityType, UrgencyType } from '@/contexts/PlanetContext';
 import { useToast } from '@/hooks/use-toast';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 const TaskItem: React.FC<{ task: Task }> = ({ task }) => {
   const { toggleTaskCompletion, deleteTask } = usePlanet();
@@ -99,8 +102,9 @@ const TaskItem: React.FC<{ task: Task }> = ({ task }) => {
 };
 
 const TaskManagement: React.FC = () => {
-  const { tasks, categories, addTask, addCategory } = usePlanet();
+  const { tasks, categories, addTask, addCategory, deleteCategory } = usePlanet();
   const [newCategory, setNewCategory] = useState('');
+  const { toast } = useToast();
   const [newTask, setNewTask] = useState({
     name: '',
     category: '',
@@ -116,6 +120,14 @@ const TaskManagement: React.FC = () => {
       addCategory({ name: newCategory.trim() });
       setNewCategory('');
     }
+  };
+
+  const handleDeleteCategory = (categoryId: string, categoryName: string) => {
+    deleteCategory(categoryId);
+    toast({
+      title: "Category Deleted",
+      description: `"${categoryName}" has been removed successfully`
+    });
   };
 
   const handleAddTask = () => {
@@ -136,6 +148,7 @@ const TaskManagement: React.FC = () => {
     }
   };
 
+  // Filtered tasks logic
   const filteredTasks = tasks.filter(task => {
     if (filterValue === 'all') return true;
     if (filterValue === 'completed') return task.completed;
@@ -201,13 +214,22 @@ const TaskManagement: React.FC = () => {
         
         <div className="flex flex-wrap gap-2 mb-4">
           {categories.map(category => (
-            <span 
+            <div 
               key={category.id}
-              className="bg-planet-dark/80 text-planet-cyan px-3 py-1 rounded-full border border-planet-cyan/30 text-sm"
+              className="bg-planet-dark/80 text-planet-cyan px-3 py-1 rounded-full border border-planet-cyan/30 text-sm flex items-center"
             >
-              {category.name}
-              <span className="ml-1 bg-planet-dark/40 px-1 rounded-full text-xs">1</span>
-            </span>
+              <span>{category.name}</span>
+              <span className="ml-1 bg-planet-dark/40 px-1 rounded-full text-xs">
+                {tasks.filter(task => task.category === category.name).length}
+              </span>
+              <button 
+                onClick={() => handleDeleteCategory(category.id, category.name)}
+                className="ml-2 text-gray-400 hover:text-red-500 transition-colors"
+                title="Delete category"
+              >
+                <Trash className="h-3 w-3" />
+              </button>
+            </div>
           ))}
         </div>
         
@@ -239,16 +261,20 @@ const TaskManagement: React.FC = () => {
           </div>
           
           <div>
-            <select
+            <Select
               value={newTask.category}
-              onChange={(e) => setNewTask({...newTask, category: e.target.value})}
-              className="bg-planet-dark/60 border border-planet-cyan/40 rounded-md py-2 px-4 text-white w-full focus:outline-none focus:border-planet-cyan"
+              onValueChange={(value) => setNewTask({...newTask, category: value})}
             >
-              <option value="">Select Category</option>
-              {categories.map(category => (
-                <option key={category.id} value={category.name}>{category.name}</option>
-              ))}
-            </select>
+              <SelectTrigger className="bg-planet-dark/60 border border-planet-cyan/40 text-white focus:border-planet-cyan">
+                <SelectValue placeholder="Select Category" />
+              </SelectTrigger>
+              <SelectContent className="bg-planet-dark text-white border-planet-cyan/40">
+                <SelectItem value="">Select Category</SelectItem>
+                {categories.map(category => (
+                  <SelectItem key={category.id} value={category.name}>{category.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
           <div>
@@ -268,15 +294,34 @@ const TaskManagement: React.FC = () => {
           </div>
           
           <div>
-            <select
+            <Select
               value={newTask.priority}
-              onChange={(e) => setNewTask({...newTask, priority: e.target.value as PriorityType})}
-              className="bg-planet-dark/60 border border-planet-cyan/40 rounded-md py-2 px-4 text-white w-full focus:outline-none focus:border-planet-cyan"
+              onValueChange={(value) => setNewTask({...newTask, priority: value as PriorityType})}
             >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
+              <SelectTrigger className="bg-planet-dark/60 border border-planet-cyan/40 text-white focus:border-planet-cyan">
+                <SelectValue placeholder="Set Priority" />
+              </SelectTrigger>
+              <SelectContent className="bg-planet-dark text-white border-planet-cyan/40">
+                <SelectItem value="low">
+                  <span className="flex items-center">
+                    <span className="h-2 w-2 rounded-full bg-green-500 mr-2"></span>
+                    Low Priority
+                  </span>
+                </SelectItem>
+                <SelectItem value="medium">
+                  <span className="flex items-center">
+                    <span className="h-2 w-2 rounded-full bg-yellow-500 mr-2"></span>
+                    Medium Priority
+                  </span>
+                </SelectItem>
+                <SelectItem value="high">
+                  <span className="flex items-center">
+                    <span className="h-2 w-2 rounded-full bg-red-500 mr-2"></span>
+                    High Priority
+                  </span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         

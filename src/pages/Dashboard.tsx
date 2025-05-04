@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ListChecks, Clock, Calendar, Star, BookOpen, Home, Settings as SettingsIcon, User, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +15,7 @@ import FloatingPlanets from '@/components/FloatingPlanets';
 import Profile from '@/components/Profile';
 import { usePlanet, TabType } from '@/contexts/PlanetContext';
 import { useToast } from '@/hooks/use-toast';
+
 const Dashboard: React.FC = () => {
   const {
     activeTab,
@@ -38,6 +40,7 @@ const Dashboard: React.FC = () => {
       navigate('/');
     }
   }, [navigate]);
+  
   const tabs = [{
     id: 'dashboard',
     label: 'Dashboard',
@@ -67,25 +70,28 @@ const Dashboard: React.FC = () => {
     label: 'Profile',
     icon: <User className="h-5 w-5 mr-2" />
   }];
+  
   const handleLogout = () => {
     // Clear all user-related data
     localStorage.removeItem('planet_current_user');
-
+    
     // Show toast notification
     toast({
       title: "Logged out",
       description: "You've been successfully logged out"
     });
-
+    
     // Reset to login page
     setCurrentUser(null);
     navigate('/', {
       replace: true
     });
   };
+  
   if (!currentUser) {
     return null; // Don't render anything until we check auth status
   }
+  
   return <div className="min-h-screen bg-space text-white relative">
       <FloatingPlanets />
       
@@ -125,15 +131,7 @@ const Dashboard: React.FC = () => {
           </button>
         </div>
       </div>
-      
-      <div className="text-center text-xs text-gray-500 mt-8 pb-4">
-        <div className="flex justify-center gap-4 mb-2">
-          
-          
-          
-        </div>
-        
-      </div>
     </div>;
 };
+
 export default Dashboard;
