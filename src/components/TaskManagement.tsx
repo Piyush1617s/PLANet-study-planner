@@ -269,7 +269,7 @@ const TaskManagement: React.FC = () => {
                 <SelectValue placeholder="Select Category" />
               </SelectTrigger>
               <SelectContent className="bg-planet-dark text-white border-planet-cyan/40">
-                <SelectItem value="">Select Category</SelectItem>
+                {/* Removed the empty string value SelectItem */}
                 {categories.map(category => (
                   <SelectItem key={category.id} value={category.name}>{category.name}</SelectItem>
                 ))}
