@@ -1,12 +1,13 @@
-
 import React, { useState } from 'react';
 import { ListChecks, Plus, Calendar, Clock, X, Tag } from 'lucide-react';
 import PlanetInput from './PlanetInput';
 import PlanetButton from './PlanetButton';
 import { usePlanet, Task, PriorityType, UrgencyType } from '@/contexts/PlanetContext';
+import { useToast } from '@/hooks/use-toast';
 
 const TaskItem: React.FC<{ task: Task }> = ({ task }) => {
   const { toggleTaskCompletion, deleteTask } = usePlanet();
+  const { toast } = useToast();
   
   const priorityColors = {
     low: 'bg-green-500',
@@ -20,16 +21,31 @@ const TaskItem: React.FC<{ task: Task }> = ({ task }) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
   
+  const handleComplete = () => {
+    toggleTaskCompletion(task.id);
+    if (!task.completed) {
+      toast({
+        title: "Task completed!",
+        description: `You've completed "${task.name}"`,
+      });
+    }
+  };
+  
   return (
     <div className="flex items-center justify-between p-3 bg-planet-dark/30 rounded-md mb-2 border-l-4"
       style={{ borderLeftColor: task.priority === 'high' ? '#ff4b4b' : task.priority === 'medium' ? '#FFB800' : '#5DE0E6' }}>
-      <div className="flex items-center gap-3">
-        <input
-          type="checkbox"
-          checked={task.completed}
-          onChange={() => toggleTaskCompletion(task.id)}
-          className="w-5 h-5 bg-transparent border-2 border-planet-cyan/50 rounded-sm focus:outline-none focus:ring-0 checked:bg-planet-cyan checked:border-planet-cyan"
-        />
+      <div className="flex items-center gap-3 w-full">
+        <button
+          onClick={handleComplete}
+          className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors ${
+            task.completed 
+            ? 'bg-planet-cyan border-planet-cyan text-planet-dark' 
+            : 'border-planet-cyan/50 hover:border-planet-cyan hover:bg-planet-cyan/10'
+          }`}
+        >
+          {task.completed && <span>✓</span>}
+        </button>
+        
         <div className="flex-1">
           <p className={`text-white ${task.completed ? 'line-through text-gray-500' : ''}`}>{task.name}</p>
           <div className="flex gap-4 mt-1 text-xs text-gray-400">
@@ -52,7 +68,25 @@ const TaskItem: React.FC<{ task: Task }> = ({ task }) => {
           </div>
         </div>
       </div>
+      
       <div className="flex items-center gap-2">
+        {!task.completed && (
+          <div className="w-24">
+            <div className="relative h-1.5 bg-gray-700 rounded overflow-hidden">
+              <div 
+                className={`absolute top-0 left-0 h-full ${
+                  task.priority === 'high' ? 'bg-red-500' : 
+                  task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                }`}
+                style={{width: task.completed ? '100%' : '50%'}}
+              ></div>
+            </div>
+            <div className="text-right text-xs text-gray-400 mt-0.5">
+              50% complete
+            </div>
+          </div>
+        )}
+        
         <button 
           onClick={() => deleteTask(task.id)}
           className="p-1 text-gray-400 hover:text-red-500 transition-colors"
@@ -125,6 +159,40 @@ const TaskManagement: React.FC = () => {
           <ListChecks className="h-8 w-8" /> Task Management
         </h1>
         <p className="text-gray-400">Organize your study tasks effectively</p>
+      </div>
+      
+      {/* Task filter tabs */}
+      <div className="mb-6 flex flex-wrap justify-center gap-2">
+        <button 
+          onClick={() => setFilterValue('all')}
+          className={`px-4 py-2 rounded-full text-sm ${
+            filterValue === 'all' 
+              ? 'bg-planet-cyan text-planet-dark' 
+              : 'bg-planet-dark/40 text-planet-cyan hover:bg-planet-dark/60'
+          }`}
+        >
+          All Tasks
+        </button>
+        <button 
+          onClick={() => setFilterValue('active')}
+          className={`px-4 py-2 rounded-full text-sm ${
+            filterValue === 'active' 
+              ? 'bg-planet-cyan text-planet-dark' 
+              : 'bg-planet-dark/40 text-planet-cyan hover:bg-planet-dark/60'
+          }`}
+        >
+          Active
+        </button>
+        <button 
+          onClick={() => setFilterValue('completed')}
+          className={`px-4 py-2 rounded-full text-sm ${
+            filterValue === 'completed' 
+              ? 'bg-planet-cyan text-planet-dark' 
+              : 'bg-planet-dark/40 text-planet-cyan hover:bg-planet-dark/60'
+          }`}
+        >
+          Completed
+        </button>
       </div>
       
       {/* Categories Section */}

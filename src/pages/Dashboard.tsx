@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
-import { ListChecks, Clock, Calendar, Star, BookOpen, Home, Settings as SettingsIcon, User } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ListChecks, Clock, Calendar, Star, BookOpen, Home, Settings as SettingsIcon, User, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Logo from '@/components/Logo';
 import NavigationButton from '@/components/NavigationButton';
 import TaskManagement from '@/components/TaskManagement';
@@ -13,10 +14,24 @@ import DashboardOverview from '@/components/DashboardOverview';
 import FloatingPlanets from '@/components/FloatingPlanets';
 import Profile from '@/components/Profile';
 import { usePlanet, TabType } from '@/contexts/PlanetContext';
+import { useToast } from '@/hooks/use-toast';
 
 const Dashboard: React.FC = () => {
   const { activeTab, setActiveTab } = usePlanet();
   const [showSettings, setShowSettings] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [currentUser, setCurrentUser] = useState<{ name: string, email: string } | null>(null);
+  
+  // Check if user is logged in
+  useEffect(() => {
+    const userInfo = localStorage.getItem('planet_current_user');
+    if (userInfo) {
+      setCurrentUser(JSON.parse(userInfo));
+    } else {
+      navigate('/');
+    }
+  }, [navigate]);
   
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: <Home className="h-5 w-5 mr-2" /> },
@@ -28,6 +43,19 @@ const Dashboard: React.FC = () => {
     { id: 'profile', label: 'Profile', icon: <User className="h-5 w-5 mr-2" /> }
   ];
   
+  const handleLogout = () => {
+    localStorage.removeItem('planet_current_user');
+    toast({
+      title: "Logged out",
+      description: "You've been successfully logged out"
+    });
+    navigate('/');
+  };
+  
+  if (!currentUser) {
+    return null; // Don't render anything until we check auth status
+  }
+  
   return (
     <div className="min-h-screen bg-space text-white relative">
       <FloatingPlanets />
@@ -36,9 +64,12 @@ const Dashboard: React.FC = () => {
         <div className="mb-8 flex justify-between items-center">
           <Logo />
           <div className="flex items-center gap-4">
-            <span className="text-planet-cyan">Welcome, piyushsharma9879988</span>
-            <button className="px-4 py-1 rounded-md border border-planet-cyan text-planet-cyan hover:bg-planet-cyan/10 transition">
-              Logout
+            <span className="text-planet-cyan">Welcome, {currentUser.name}</span>
+            <button 
+              onClick={handleLogout}
+              className="px-4 py-1 rounded-md border border-planet-cyan text-planet-cyan hover:bg-planet-cyan/10 transition flex items-center gap-1"
+            >
+              <LogOut className="h-4 w-4" /> Logout
             </button>
           </div>
         </div>

@@ -1,39 +1,34 @@
 
-import React, { useState } from 'react';
-import { format, startOfWeek, addDays, isSameDay, parseISO, addWeeks, subWeeks } from 'date-fns';
-import type { Day } from 'date-fns';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, getDay, isSameDay, parseISO } from 'date-fns';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Save } from 'lucide-react';
 import PlanetCard from './PlanetCard';
 import { usePlanet } from '@/contexts/PlanetContext';
+import { useToast } from '@/hooks/use-toast';
 
 const CalendarView: React.FC = () => {
   const { settings, tasks, events } = usePlanet();
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const { toast } = useToast();
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [notes, setNotes] = useState('');
+  const [savedNotes, setSavedNotes] = useState<Record<string, string>>({});
   
-  // Get the start of the week based on user settings
-  const getStartOfWeek = () => {
-    const dayMap: Record<string, Day> = {
-      'Sunday': 0 as Day,
-      'Monday': 1 as Day,
-      'Tuesday': 2 as Day,
-      'Wednesday': 3 as Day,
-      'Thursday': 4 as Day,
-      'Friday': 5 as Day,
-      'Saturday': 6 as Day
-    };
-    
-    return startOfWeek(currentDate, { weekStartsOn: dayMap[settings.firstDayOfWeek] });
+  // Get days in current month
+  const getDaysInMonth = () => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
+    return eachDayOfInterval({ start: monthStart, end: monthEnd });
   };
   
-  const weekStart = getStartOfWeek();
+  const days = getDaysInMonth();
   
-  // Generate week days
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  // Calculate blank days at start of month (for formatting calendar grid)
+  const firstDayOfMonth = getDay(startOfMonth(currentMonth));
+  const blankDays = Array.from({ length: firstDayOfMonth }, (_, i) => i);
   
-  // Handlers for navigation
-  const previousWeek = () => setCurrentDate(subWeeks(currentDate, 1));
-  const nextWeek = () => setCurrentDate(addWeeks(currentDate, 1));
+  // Navigation handlers
+  const previousMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
+  const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
   
   // Get tasks and events for a specific day
   const getTasksForDay = (date: Date) => {
@@ -57,62 +52,120 @@ const CalendarView: React.FC = () => {
       }
     });
   };
+  
+  // Load saved notes when month changes
+  useEffect(() => {
+    const monthKey = format(currentMonth, 'yyyy-MM');
+    const savedNote = localStorage.getItem(`planet_notes_${monthKey}`);
+    if (savedNote) {
+      setNotes(savedNote);
+    } else {
+      setNotes('');
+    }
+  }, [currentMonth]);
+  
+  // Save notes
+  const saveNotes = () => {
+    const monthKey = format(currentMonth, 'yyyy-MM');
+    localStorage.setItem(`planet_notes_${monthKey}`, notes);
+    
+    toast({
+      title: "Notes saved",
+      description: `Your notes for ${format(currentMonth, 'MMMM yyyy')} have been saved.`
+    });
+  };
 
   return (
     <PlanetCard title={<div className="flex items-center gap-2"><CalendarIcon className="h-5 w-5" /> Calendar</div>}>
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
           <button
-            onClick={previousWeek}
+            onClick={previousMonth}
             className="p-2 rounded-full bg-planet-dark/40 text-planet-cyan hover:bg-planet-dark/60 transition-colors"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
           
           <div className="text-xl text-planet-cyan">
-            {format(weekStart, 'MMMM yyyy')}
+            {format(currentMonth, 'MMMM yyyy')}
           </div>
           
           <button
-            onClick={nextWeek}
+            onClick={nextMonth}
             className="p-2 rounded-full bg-planet-dark/40 text-planet-cyan hover:bg-planet-dark/60 transition-colors"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
         </div>
         
-        <div className="grid grid-cols-7 gap-2">
-          {weekDays.map((day, i) => (
-            <div key={i} className="text-center">
-              <div className="text-planet-cyan font-medium py-1">
-                {format(day, 'EEEE')}
-              </div>
-              <div className={`p-2 rounded-full mx-auto w-8 h-8 flex items-center justify-center
-                ${isSameDay(day, new Date()) ? 'bg-planet-cyan text-planet-dark' : 'text-white'}`}
-              >
-                {format(day, 'd')}
-              </div>
-              
-              <div className="mt-2 h-32 overflow-y-auto text-left py-1 px-2">
-                {getTasksForDay(day).map(task => (
-                  <div key={task.id} className="text-xs mb-1 p-1 bg-planet-dark/40 rounded border-l-2 border-red-500">
-                    {task.name}
-                  </div>
-                ))}
-                
-                {getEventsForDay(day).map(event => (
-                  <div key={event.id} className="text-xs mb-1 p-1 bg-planet-dark/40 rounded border-l-2 border-planet-purple">
-                    {event.time} - {event.name}
-                  </div>
-                ))}
-              </div>
+        {/* Calendar weekday headers */}
+        <div className="grid grid-cols-7 gap-1 mb-1">
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => (
+            <div key={i} className="text-center text-planet-cyan font-medium py-1">
+              {day}
             </div>
           ))}
+        </div>
+        
+        {/* Calendar grid */}
+        <div className="grid grid-cols-7 gap-1">
+          {/* Blank days */}
+          {blankDays.map(day => (
+            <div key={`blank-${day}`} className="aspect-square p-1"></div>
+          ))}
+          
+          {/* Actual days */}
+          {days.map((day, i) => {
+            const isToday = isSameDay(day, new Date());
+            const tasksForDay = getTasksForDay(day);
+            const eventsForDay = getEventsForDay(day);
+            const hasItems = tasksForDay.length > 0 || eventsForDay.length > 0;
+            
+            return (
+              <div 
+                key={i} 
+                className={`aspect-square border border-planet-cyan/10 rounded-md overflow-hidden flex flex-col
+                  ${isToday ? 'bg-planet-cyan/10' : 'bg-planet-dark/20'}`}
+              >
+                <div className={`text-right p-1 font-medium ${isToday ? 'text-planet-cyan' : 'text-white'}`}>
+                  {format(day, 'd')}
+                </div>
+                
+                <div className="flex-1 p-1 overflow-y-auto">
+                  {tasksForDay.slice(0, 2).map(task => (
+                    <div key={task.id} className="text-xs mb-1 truncate px-1 bg-planet-dark/30 border-l-2 border-red-500">
+                      {task.name}
+                    </div>
+                  ))}
+                  
+                  {eventsForDay.slice(0, 2).map(event => (
+                    <div key={event.id} className="text-xs mb-1 truncate px-1 bg-planet-dark/30 border-l-2 border-planet-purple">
+                      {event.name}
+                    </div>
+                  ))}
+                  
+                  {hasItems && tasksForDay.length + eventsForDay.length > 4 && (
+                    <div className="text-xs text-center text-gray-400">
+                      +{tasksForDay.length + eventsForDay.length - 4} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
       
       <div className="mt-8">
-        <h3 className="text-lg text-planet-cyan mb-3">Month Notes</h3>
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-lg text-planet-cyan">Month Notes</h3>
+          <button 
+            onClick={saveNotes}
+            className="flex items-center gap-1 text-planet-cyan bg-planet-dark/40 px-3 py-1 rounded-md hover:bg-planet-dark/60 transition-colors"
+          >
+            <Save className="h-4 w-4" /> Save Notes
+          </button>
+        </div>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}

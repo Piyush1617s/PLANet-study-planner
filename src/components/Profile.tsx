@@ -1,31 +1,85 @@
 
-import React, { useState } from 'react';
-import { User, Mail, Clock, BookOpen, Edit, Save, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, Mail, Clock, BookOpen, Edit, Save, X, LogOut } from 'lucide-react';
 import PlanetCard from './PlanetCard';
 import PlanetButton from './PlanetButton';
 import PlanetInput from './PlanetInput';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 const Profile: React.FC = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   
-  // In a real app, this would come from context or props
-  const [userData, setUserData] = useState({
-    name: 'Student Name',
-    email: 'student@university.edu',
-    joinedDate: '2023-09-01',
-    major: 'Computer Science',
-    studyHours: 120,
-    completedTasks: 48
-  });
+  // Load user data from localStorage
+  const loadUserData = () => {
+    // Get current user
+    const currentUser = localStorage.getItem('planet_current_user');
+    if (!currentUser) {
+      // No logged in user, should redirect to login
+      navigate('/'); 
+      return {
+        name: '',
+        email: '',
+        joinedDate: new Date().toISOString().split('T')[0],
+        major: '',
+        studyHours: 0,
+        completedTasks: 0
+      };
+    }
+    
+    const user = JSON.parse(currentUser);
+    
+    // Get user profile data if exists
+    const profileData = localStorage.getItem(`planet_profile_${user.email}`);
+    if (profileData) {
+      return JSON.parse(profileData);
+    }
+    
+    // Default profile data
+    return {
+      name: user.name,
+      email: user.email,
+      joinedDate: new Date().toISOString().split('T')[0],
+      major: 'Computer Science',
+      studyHours: 120,
+      completedTasks: 48
+    };
+  };
   
+  const [userData, setUserData] = useState(loadUserData);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({ ...userData });
+  
   const [goals, setGoals] = useState({
     weeklyStudyHours: 8,
     weeklyStudyHoursTarget: 12,
     assignmentCompletion: 85
   });
+  
+  // Load goals data
+  useEffect(() => {
+    if (userData.email) {
+      const savedGoals = localStorage.getItem(`planet_goals_${userData.email}`);
+      if (savedGoals) {
+        setGoals(JSON.parse(savedGoals));
+      }
+    }
+  }, [userData.email]);
+  
+  // Save user data to localStorage whenever it changes
+  useEffect(() => {
+    if (userData.email) {
+      localStorage.setItem(`planet_profile_${userData.email}`, JSON.stringify(userData));
+    }
+  }, [userData]);
+  
+  // Save goals data to localStorage whenever they change
+  useEffect(() => {
+    if (userData.email) {
+      localStorage.setItem(`planet_goals_${userData.email}`, JSON.stringify(goals));
+    }
+  }, [goals, userData.email]);
   
   const handleEdit = () => {
     setIsEditing(true);
@@ -48,12 +102,21 @@ const Profile: React.FC = () => {
     }
     
     // Update user data
-    setUserData({
+    const updatedData = {
       ...userData,
       name: editData.name,
       email: editData.email,
       major: editData.major
-    });
+    };
+    
+    setUserData(updatedData);
+    
+    // Update current user in localStorage
+    const currentUser = {
+      email: editData.email,
+      name: editData.name
+    };
+    localStorage.setItem('planet_current_user', JSON.stringify(currentUser));
     
     setIsEditing(false);
     
@@ -85,6 +148,19 @@ const Profile: React.FC = () => {
       });
     }
   };
+  
+  const handleLogout = () => {
+    // Remove current user from localStorage
+    localStorage.removeItem('planet_current_user');
+    
+    toast({
+      title: "Logged out",
+      description: "You've been successfully logged out"
+    });
+    
+    // Redirect to login page
+    navigate('/');
+  };
 
   return (
     <PlanetCard title={<div className="flex items-center gap-2"><User className="h-5 w-5" /> Profile</div>}>
@@ -101,9 +177,14 @@ const Profile: React.FC = () => {
             </div>
           </div>
           {!isEditing ? (
-            <PlanetButton variant="outline" className="mt-4 text-sm" onClick={handleEdit}>
-              <Edit className="h-4 w-4 mr-1" /> Edit Profile
-            </PlanetButton>
+            <div className="flex flex-col gap-2 mt-4">
+              <PlanetButton variant="outline" className="text-sm" onClick={handleEdit}>
+                <Edit className="h-4 w-4 mr-1" /> Edit Profile
+              </PlanetButton>
+              <PlanetButton variant="outline" className="text-sm bg-red-500/10 hover:bg-red-500/20 border-red-500/30 text-red-400" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-1" /> Log Out
+              </PlanetButton>
+            </div>
           ) : (
             <div className="flex gap-2 mt-4">
               <PlanetButton variant="outline" className="text-sm" onClick={handleSave}>

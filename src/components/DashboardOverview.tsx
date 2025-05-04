@@ -5,10 +5,11 @@ import { ListChecks, BookOpen, Clock, Calendar } from 'lucide-react';
 import PlanetCard from './PlanetCard';
 import { usePlanet } from '@/contexts/PlanetContext';
 
-const COLORS = ['#5DE0E6'];
+// Define a color palette for the pie chart
+const COLORS = ['#5DE0E6', '#9B87F5', '#FE6479', '#FFB800', '#3a4a63', '#633a4a'];
 
 const DashboardOverview: React.FC = () => {
-  const { subjects, tasks, studySessions, events } = usePlanet();
+  const { settings, tasks, events, subjects, studySessions } = usePlanet();
   
   // Calculate completion statistics
   const completedTasks = tasks.filter(task => task.completed).length;
@@ -40,23 +41,22 @@ const DashboardOverview: React.FC = () => {
   const tasksByPriority = {
     low: tasks.filter(task => task.priority === 'low').length,
     medium: tasks.filter(task => task.priority === 'medium').length,
-    high: tasks.filter(task => task.priority === 'high').length,
-    critical: 0 // Added for the chart layout
+    high: tasks.filter(task => task.priority === 'high').length
   };
   
   const priorityData = [
     { name: 'Low', value: tasksByPriority.low },
     { name: 'Medium', value: tasksByPriority.medium },
-    { name: 'High', value: tasksByPriority.high },
-    { name: 'Critical', value: tasksByPriority.critical }
+    { name: 'High', value: tasksByPriority.high }
   ];
   
-  // Subject progress data
-  const subjectProgressData = subjects.map(subject => ({
+  // Subject progress data - make sure each subject has a unique key and fix rendering
+  const subjectProgressData = subjects.map((subject, index) => ({
     name: subject.name,
-    value: subject.completion
+    value: subject.completion,
+    id: subject.id // Ensuring each subject has a unique key
   }));
-  
+
   // Upcoming tasks (not completed, sorted by date)
   const upcomingTasks = tasks
     .filter(task => !task.completed)
@@ -111,39 +111,47 @@ const DashboardOverview: React.FC = () => {
       
       {/* Charts and Lists */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <PlanetCard className="min-h-[300px]">
+        <PlanetCard className="min-h-[300px] relative">
           <h3 className="text-xl text-planet-cyan mb-4">Subject Progress</h3>
           <div className="h-[250px] flex items-center justify-center">
             {subjectProgressData.length > 0 ? (
-              <>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={subjectProgressData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      fill="#5DE0E6"
-                      paddingAngle={1}
-                      dataKey="value"
-                    >
-                      {subjectProgressData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill="#5DE0E6" />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => `${value}%`} />
-                  </PieChart>
-                </ResponsiveContainer>
-                {subjectProgressData.map((subject) => (
-                  <div key={subject.name} className="text-planet-cyan absolute bottom-8 left-8">
-                    {subject.name}: {subject.value}%
-                  </div>
-                ))}
-              </>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={subjectProgressData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    fill="#5DE0E6"
+                    paddingAngle={1}
+                    dataKey="value"
+                  >
+                    {subjectProgressData.map((entry, index) => (
+                      <Cell key={`cell-${entry.id}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => `${value}%`} />
+                </PieChart>
+              </ResponsiveContainer>
             ) : (
               <p className="text-gray-400">No subject data available</p>
             )}
+          </div>
+          
+          {/* Legend for the pie chart */}
+          <div className="absolute bottom-4 left-4 right-4">
+            <div className="flex flex-wrap gap-4">
+              {subjectProgressData.map((subject, index) => (
+                <div key={subject.id} className="flex items-center gap-1 text-xs">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                  ></div>
+                  <span className="text-white">{subject.name}: {subject.value}%</span>
+                </div>
+              ))}
+            </div>
           </div>
         </PlanetCard>
         
@@ -154,11 +162,11 @@ const DashboardOverview: React.FC = () => {
               <BarChart data={priorityData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#444" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                <YAxis domain={[0, 1]} axisLine={false} tickLine={false} />
+                <YAxis domain={[0, 'auto']} axisLine={false} tickLine={false} />
                 <Tooltip />
                 <Bar dataKey="value" name="Tasks">
                   {priorityData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill="#5DE0E6" />
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Bar>
               </BarChart>
@@ -169,10 +177,7 @@ const DashboardOverview: React.FC = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <PlanetCard>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl text-planet-cyan">Upcoming Tasks</h3>
-            <a href="#" className="text-planet-cyan hover:underline text-sm">View All</a>
-          </div>
+          <h3 className="text-xl text-planet-cyan mb-4">Upcoming Tasks</h3>
           
           {upcomingTasks.length > 0 ? (
             <div className="space-y-2">
@@ -199,21 +204,10 @@ const DashboardOverview: React.FC = () => {
           ) : (
             <p className="text-gray-400 text-center py-8">No upcoming tasks</p>
           )}
-          
-          {upcomingTasks.length > 0 && (
-            <div className="text-center mt-4">
-              <button className="px-5 py-2 rounded-md border border-planet-cyan text-planet-cyan hover:bg-planet-cyan/10 transition">
-                Add Event
-              </button>
-            </div>
-          )}
         </PlanetCard>
         
         <PlanetCard>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl text-planet-cyan">Upcoming Events</h3>
-            <a href="#" className="text-planet-cyan hover:underline text-sm">View All</a>
-          </div>
+          <h3 className="text-xl text-planet-cyan mb-4">Upcoming Events</h3>
           
           {upcomingEvents.length > 0 ? (
             <div className="space-y-2">
@@ -233,10 +227,7 @@ const DashboardOverview: React.FC = () => {
             </div>
           ) : (
             <div className="text-gray-400 text-center py-8">
-              <p className="mb-4">No upcoming events</p>
-              <button className="px-5 py-2 rounded-md border border-planet-cyan text-planet-cyan hover:bg-planet-cyan/10 transition">
-                Add Event
-              </button>
+              <p>No upcoming events</p>
             </div>
           )}
         </PlanetCard>
