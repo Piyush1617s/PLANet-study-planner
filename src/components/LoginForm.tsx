@@ -1,15 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { User, Lock, AtSign } from 'lucide-react';
 import PlanetCard from './PlanetCard';
 import PlanetInput from './PlanetInput';
 import PlanetButton from './PlanetButton';
 import { useToast } from '@/hooks/use-toast';
-
 interface LoginFormProps {
   onLogin: () => void;
 }
-
 const LoginForm: React.FC<LoginFormProps> = ({
   onLogin
 }) => {
@@ -20,52 +17,58 @@ const LoginForm: React.FC<LoginFormProps> = ({
     name: ''
   });
   const [error, setError] = useState('');
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
 
   // Load users from localStorage
-  const loadUsers = (): Array<{email: string, password: string, name: string}> => {
+  const loadUsers = (): Array<{
+    email: string;
+    password: string;
+    name: string;
+  }> => {
     const storedUsers = localStorage.getItem('planet_users');
     if (storedUsers) {
       return JSON.parse(storedUsers);
     }
     // Default users if no stored users exist
-    return [
-      {
-        email: 'student@university.edu',
-        password: 'password123',
-        name: 'Student Name'
-      }, 
-      {
-        email: 'test@example.com',
-        password: 'test123',
-        name: 'Test User'
-      }
-    ];
+    return [{
+      email: 'student@university.edu',
+      password: 'password123',
+      name: 'Student Name'
+    }, {
+      email: 'test@example.com',
+      password: 'test123',
+      name: 'Test User'
+    }];
   };
 
   // Save users to localStorage
-  const saveUsers = (users: Array<{email: string, password: string, name: string}>) => {
+  const saveUsers = (users: Array<{
+    email: string;
+    password: string;
+    name: string;
+  }>) => {
     localStorage.setItem('planet_users', JSON.stringify(users));
   };
-
   const toggleMode = () => {
     setIsSignUp(!isSignUp);
     setError('');
   };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    const {
+      name,
+      value
+    } = e.target;
     setFormData({
       ...formData,
       [name]: value
     });
     setError('');
   };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const users = loadUsers();
-
     if (isSignUp) {
       // Handle sign up
       if (formData.name.trim() === '' || formData.email.trim() === '' || formData.password.trim() === '') {
@@ -89,15 +92,13 @@ const LoginForm: React.FC<LoginFormProps> = ({
         password: formData.password,
         name: formData.name
       }];
-      
       saveUsers(newUsers);
-      
+
       // Save current user
       localStorage.setItem('planet_current_user', JSON.stringify({
         email: formData.email,
         name: formData.name
       }));
-
       toast({
         title: "Account created!",
         description: "Your account has been successfully created."
@@ -118,7 +119,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
           email: user.email,
           name: user.name
         }));
-
         toast({
           title: "Welcome back!",
           description: `You've successfully signed in as ${user.name}.`
@@ -129,7 +129,6 @@ const LoginForm: React.FC<LoginFormProps> = ({
       }
     }
   };
-
   return <div className="min-h-screen flex items-center justify-center">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
@@ -139,10 +138,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
               <div className="h-4 w-4 rounded-full bg-planet-cyan absolute z-20 translate-x-1 -translate-y-1"></div>
             </div>
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-planet-cyan via-blue-400 to-planet-purple bg-clip-text text-transparent animate-glow">PLANet</h1>
-          <p className="text-gray-300 mt-2">
-            Your Study Planner in Space
-          </p>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-planet-cyan via-blue-400 to-planet-purple bg-clip-text animate-glow text-zinc-300">PLANet</h1>
+          
         </div>
         
         <PlanetCard className="shadow-lg shadow-planet-cyan/10">
@@ -182,5 +179,4 @@ const LoginForm: React.FC<LoginFormProps> = ({
       </div>
     </div>;
 };
-
 export default LoginForm;
