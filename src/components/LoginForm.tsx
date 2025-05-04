@@ -101,7 +101,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
             </div>
           </div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-planet-cyan via-blue-400 to-planet-purple bg-clip-text text-transparent animate-glow">PLANet</h1>
-          <p className="text-gray-300 mt-2">Your Academic Success Partner</p>
+          <p className="text-gray-300 mt-2">
+        </p>
         </div>
         
         <PlanetCard className="shadow-lg shadow-planet-cyan/10">
