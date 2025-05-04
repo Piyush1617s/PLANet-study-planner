@@ -150,16 +150,17 @@ const Profile: React.FC = () => {
   };
   
   const handleLogout = () => {
-    // Remove current user from localStorage
+    // Clear all user-related data
     localStorage.removeItem('planet_current_user');
     
+    // Show toast notification
     toast({
       title: "Logged out",
       description: "You've been successfully logged out"
     });
     
-    // Redirect to login page
-    navigate('/');
+    // Redirect to login page with replace to prevent back navigation
+    navigate('/', { replace: true });
   };
 
   return (

@@ -44,12 +44,18 @@ const Dashboard: React.FC = () => {
   ];
   
   const handleLogout = () => {
+    // Clear all user-related data
     localStorage.removeItem('planet_current_user');
+    
+    // Show toast notification
     toast({
       title: "Logged out",
       description: "You've been successfully logged out"
     });
-    navigate('/');
+    
+    // Reset to login page
+    setCurrentUser(null);
+    navigate('/', { replace: true });
   };
   
   if (!currentUser) {
