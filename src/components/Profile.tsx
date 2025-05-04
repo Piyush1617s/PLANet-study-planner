@@ -5,10 +5,9 @@ import PlanetButton from './PlanetButton';
 import PlanetInput from './PlanetInput';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+
 const Profile: React.FC = () => {
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   // Load user data from localStorage
@@ -45,11 +44,10 @@ const Profile: React.FC = () => {
       completedTasks: 48
     };
   };
+  
   const [userData, setUserData] = useState(loadUserData);
   const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({
-    ...userData
-  });
+  const [editData, setEditData] = useState({...userData});
   const [goals, setGoals] = useState({
     weeklyStudyHours: 8,
     weeklyStudyHoursTarget: 12,
@@ -79,15 +77,16 @@ const Profile: React.FC = () => {
       localStorage.setItem(`planet_goals_${userData.email}`, JSON.stringify(goals));
     }
   }, [goals, userData.email]);
+  
   const handleEdit = () => {
     setIsEditing(true);
-    setEditData({
-      ...userData
-    });
+    setEditData({...userData});
   };
+  
   const handleCancel = () => {
     setIsEditing(false);
   };
+  
   const handleSave = () => {
     // Validate input
     if (!editData.name.trim() || !editData.email.trim() || !editData.major.trim()) {
@@ -120,16 +119,15 @@ const Profile: React.FC = () => {
       description: "Your profile has been successfully updated"
     });
   };
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const {
-      name,
-      value
-    } = e.target;
+    const { name, value } = e.target;
     setEditData({
       ...editData,
       [name]: value
     });
   };
+  
   const updateGoal = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
     const value = parseInt(e.target.value);
     if (!isNaN(value) && value >= 0) {
@@ -143,6 +141,7 @@ const Profile: React.FC = () => {
       });
     }
   };
+  
   const handleLogout = () => {
     // Clear all user-related data
     localStorage.removeItem('planet_current_user');
@@ -154,11 +153,11 @@ const Profile: React.FC = () => {
     });
 
     // Redirect to login page with replace to prevent back navigation
-    navigate('/', {
-      replace: true
-    });
+    navigate('/', { replace: true });
   };
-  return <PlanetCard title={<div className="flex items-center gap-2"><User className="h-5 w-5" /> Profile</div>}>
+  
+  return (
+    <PlanetCard title={<div className="flex items-center gap-2"><User className="h-5 w-5" /> Profile</div>}>
       <div className="flex flex-col md:flex-row gap-6">
         <div className="flex-shrink-0 flex flex-col items-center">
           <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-cyan-300 rounded-full flex items-center justify-center text-white text-3xl font-bold">
@@ -171,19 +170,25 @@ const Profile: React.FC = () => {
               <span>{userData.email}</span>
             </div>
           </div>
-          {!isEditing ? <div className="flex flex-col gap-2 mt-4">
+          {!isEditing ? (
+            <div className="flex flex-col gap-2 mt-4">
               <PlanetButton variant="outline" className="text-sm" onClick={handleEdit}>
                 <Edit className="h-4 w-4 mr-1" /> Edit Profile
               </PlanetButton>
-              
-            </div> : <div className="flex gap-2 mt-4">
+              <PlanetButton variant="outline" className="text-sm" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-1" /> Logout
+              </PlanetButton>
+            </div>
+          ) : (
+            <div className="flex gap-2 mt-4">
               <PlanetButton variant="outline" className="text-sm" onClick={handleSave}>
                 <Save className="h-4 w-4 mr-1" /> Save
               </PlanetButton>
               <PlanetButton variant="outline" className="text-sm" onClick={handleCancel}>
                 <X className="h-4 w-4 mr-1" /> Cancel
               </PlanetButton>
-            </div>}
+            </div>
+          )}
         </div>
 
         <div className="flex-grow">
@@ -257,6 +262,8 @@ const Profile: React.FC = () => {
           </div>
         </div>
       </div>
-    </PlanetCard>;
+    </PlanetCard>
+  );
 };
+
 export default Profile;

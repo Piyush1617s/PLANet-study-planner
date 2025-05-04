@@ -81,11 +81,11 @@ const Dashboard: React.FC = () => {
       description: "You've been successfully logged out"
     });
     
-    // Reset to login page
+    // Update the state to trigger the useEffect redirect
     setCurrentUser(null);
-    navigate('/', {
-      replace: true
-    });
+    
+    // Explicitly navigate to the root where login form should be
+    navigate('/', { replace: true });
   };
   
   if (!currentUser) {
