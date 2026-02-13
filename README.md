@@ -6,7 +6,7 @@ Welcome to the repository for a fully-featured, space-themed productivity dashbo
 
 ## 🌐 Project Link
 
-Deployed Version: [Click Here](#) *(Replace with your live project URL)*
+Deployed Version: [Click Here](#) *(study-flow-genius.vercel.app)*
 
 ---
 
